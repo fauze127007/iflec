@@ -203,6 +203,33 @@
         #course-player-content::-webkit-scrollbar { display: none; }
         #course-toast { transition: opacity .2s ease, transform .2s ease; }
         #course-toast.course-toast-show { opacity: 1; transform: translateY(0); }
+
+        /* 2D Money Quest */
+        #money-quest-canvas {
+            width: 100%;
+            height: clamp(220px, 44vh, 320px);
+            background: linear-gradient(180deg, #1A237E 0%, #312E81 45%, #0F172A 100%);
+            border-radius: 1rem;
+            touch-action: none;
+        }
+        .money-quest-control {
+            width: 3rem;
+            height: 3rem;
+            border-radius: .9rem;
+            border: 1px solid rgba(90, 42, 130, 0.2);
+            background: #fff;
+            color: #1A237E;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .money-quest-control:active {
+            transform: scale(0.96);
+            background: #F3F0FF;
+        }
     </style>
 </head>
 <body class="flex justify-center items-center min-h-[100dvh] text-brand-navy overflow-hidden p-0 md:p-4">
@@ -569,6 +596,14 @@
                             <p class="text-xs text-gray-500 font-medium mt-1">Learn, practise, quiz, and build your Money Pitch</p>
                         </div>
                         <i class="ph ph-arrow-right text-xl text-[#D49E00]"></i>
+                    </button>
+                    <button onclick="openMoneyQuest()" class="w-full mb-5 bg-brand-purple/10 border border-brand-purple/20 text-brand-navy rounded-2xl p-4 text-left active:scale-[0.98] flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-brand-purple text-white flex items-center justify-center flex-shrink-0"><i class="ph ph-game-controller text-xl"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-outfit font-bold leading-tight">2D Money Quest</p>
+                            <p class="text-xs text-gray-500 font-medium mt-1">Collect smart money habits, avoid traps, answer quick finance checks.</p>
+                        </div>
+                        <i class="ph ph-play text-xl text-brand-purple"></i>
                     </button>
                     <div class="grid grid-cols-2 gap-4" id="modes-grid">
                         <!-- Rendered dynamically -->
@@ -1069,6 +1104,75 @@
                             <button onclick="openCourseLibrary()" class="w-full mt-4 px-4 py-3 rounded-full bg-brand-yellow text-brand-navy text-sm font-bold active:scale-[0.98] flex items-center justify-center gap-2">
                                 Start Interactive Course <i class="ph ph-arrow-right"></i>
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 2D MONEY QUEST ================= -->
+        <div id="view-money-quest" class="absolute inset-0 bg-surface z-[49] flex flex-col translate-x-full transition-transform duration-300">
+            <div class="px-4 py-4 bg-white border-b border-gray-100 flex items-center gap-4 shadow-sm flex-shrink-0">
+                <button onclick="closeMoneyQuest()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors text-brand-navy">
+                    <i class="ph ph-caret-left text-2xl"></i>
+                </button>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-outfit font-bold text-lg text-brand-navy leading-tight">2D Money Quest</h3>
+                    <p id="money-quest-header-tip" class="text-xs text-gray-500 font-medium">Collect smart finance tokens. Avoid money traps.</p>
+                </div>
+                <button onclick="toggleMoneyQuestPause()" id="money-quest-pause-btn" class="px-3 py-2 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold active:scale-95">Pause</button>
+            </div>
+            <div class="px-4 pt-4 pb-3 bg-surface flex-shrink-0">
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="bg-white border border-gray-100 rounded-xl py-2">
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Score</p>
+                        <p id="money-quest-score" class="font-outfit text-lg font-extrabold text-brand-navy">0</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl py-2">
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Best</p>
+                        <p id="money-quest-best" class="font-outfit text-lg font-extrabold text-brand-purple">0</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl py-2">
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Lives</p>
+                        <p id="money-quest-lives" class="font-outfit text-lg font-extrabold text-brand-magenta">3</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl py-2">
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Time</p>
+                        <p id="money-quest-time" class="font-outfit text-lg font-extrabold text-brand-green">60s</p>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 pb-4 flex-1 min-h-0 overflow-y-auto space-y-3">
+                <div class="relative">
+                    <canvas id="money-quest-canvas" aria-label="2D Money Quest game area"></canvas>
+                    <div id="money-quest-quiz" class="hidden absolute inset-3 bg-white/95 border border-brand-purple/20 rounded-2xl p-4">
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-brand-magenta mb-1">Finance Checkpoint</p>
+                        <p id="money-quest-quiz-question" class="text-sm font-bold text-brand-navy leading-relaxed"></p>
+                        <div id="money-quest-quiz-options" class="mt-3 space-y-2"></div>
+                        <p id="money-quest-quiz-feedback" class="text-xs text-gray-500 font-semibold mt-3"></p>
+                    </div>
+                    <div id="money-quest-gameover" class="hidden absolute inset-3 bg-[#1A237E]/95 text-white rounded-2xl p-5 flex flex-col justify-center items-center text-center">
+                        <p class="text-[10px] uppercase tracking-[0.14em] font-bold text-brand-yellow mb-1">Session Complete</p>
+                        <h4 class="font-outfit text-2xl font-extrabold">Game Over</h4>
+                        <p id="money-quest-gameover-score" class="text-sm font-semibold mt-2"></p>
+                        <button onclick="restartMoneyQuest()" class="mt-4 px-5 py-3 rounded-full bg-brand-yellow text-brand-navy text-sm font-extrabold active:scale-[0.98]">Restart Quest</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 p-4">
+                    <p class="text-[10px] uppercase tracking-wider font-bold text-brand-purple mb-2">Controls</p>
+                    <p class="text-xs text-gray-600 font-medium leading-relaxed mb-3">Desktop: Arrow keys / WASD. Mobile: hold touch pad buttons. Avoid scam and debt icons. Correct finance answers give bonus + shield.</p>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="grid grid-cols-3 gap-2 w-[170px]">
+                            <span></span>
+                            <button class="money-quest-control" data-mq-dir="up" aria-label="Move up"><i class="ph ph-caret-up"></i></button>
+                            <span></span>
+                            <button class="money-quest-control" data-mq-dir="left" aria-label="Move left"><i class="ph ph-caret-left"></i></button>
+                            <button class="money-quest-control" data-mq-dir="down" aria-label="Move down"><i class="ph ph-caret-down"></i></button>
+                            <button class="money-quest-control" data-mq-dir="right" aria-label="Move right"><i class="ph ph-caret-right"></i></button>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="toggleMoneyQuestPause()" class="px-4 py-2 rounded-full bg-brand-purple/10 text-brand-purple text-xs font-bold active:scale-95">Pause / Resume</button>
+                            <button onclick="restartMoneyQuest()" class="px-4 py-2 rounded-full bg-brand-yellow/20 text-brand-navy text-xs font-bold active:scale-95">Restart</button>
                         </div>
                     </div>
                 </div>
@@ -1749,6 +1853,20 @@
         const inputProfileGoal = document.getElementById('input-profile-goal');
         const inputProfileBio = document.getElementById('input-profile-bio');
         const modeFilterBar = document.getElementById('mode-filter-bar');
+        const moneyQuestView = document.getElementById('view-money-quest');
+        const moneyQuestCanvas = document.getElementById('money-quest-canvas');
+        const moneyQuestScoreEl = document.getElementById('money-quest-score');
+        const moneyQuestBestEl = document.getElementById('money-quest-best');
+        const moneyQuestLivesEl = document.getElementById('money-quest-lives');
+        const moneyQuestTimeEl = document.getElementById('money-quest-time');
+        const moneyQuestPauseBtn = document.getElementById('money-quest-pause-btn');
+        const moneyQuestHeaderTip = document.getElementById('money-quest-header-tip');
+        const moneyQuestQuizPanel = document.getElementById('money-quest-quiz');
+        const moneyQuestQuizQuestion = document.getElementById('money-quest-quiz-question');
+        const moneyQuestQuizOptions = document.getElementById('money-quest-quiz-options');
+        const moneyQuestQuizFeedback = document.getElementById('money-quest-quiz-feedback');
+        const moneyQuestGameOverPanel = document.getElementById('money-quest-gameover');
+        const moneyQuestGameOverScore = document.getElementById('money-quest-gameover-score');
 
         // --- OPTIONAL ACCOUNT SYNC + ALWAYS-AVAILABLE LOCAL ACCESS ---
         function createLocalGuestUser() {
@@ -5434,6 +5552,409 @@
             updateProfileUI();
             persistUserState();
             hideLearningAdvice();
+        };
+
+        // --- 2D MONEY QUEST: STATE ---
+        const moneyQuestContext = moneyQuestCanvas ? moneyQuestCanvas.getContext('2d') : null;
+        const MONEY_QUEST_QUESTIONS = [
+            { q: 'Which is best for emergencies?', options: ['Emergency fund', 'Luxury shopping', 'Payday loan'], answer: 0, feedback: 'Great. Emergency funds reduce debt pressure.', bonus: 14 },
+            { q: 'A budget should track...', options: ['Income and expenses', 'Only income', 'Only wants'], answer: 0, feedback: 'Correct. Track both inflow and outflow.', bonus: 12 },
+            { q: 'Impulse spending usually...', options: ['Helps long-term goals', 'Can hurt saving goals', 'Has no effect'], answer: 1, feedback: 'Yes. Small impulse buys can delay goals.', bonus: 12 },
+            { q: 'Debt traps often include...', options: ['Hidden high fees', 'Clear low-risk terms', 'No repayment plan needed'], answer: 0, feedback: 'Right. Always check total payable and fees.', bonus: 14 }
+        ];
+        const MONEY_QUEST_ITEMS = {
+            positive: [
+                { label: 'S', color: '#FFC000', value: 10, speed: [90, 150] },
+                { label: 'B', color: '#2E7D32', value: 12, speed: [95, 160] },
+                { label: 'E', color: '#4F46E5', value: 14, speed: [100, 165] }
+            ],
+            negative: [
+                { label: '!', color: '#C2185B', value: -12, speed: [115, 185] },
+                { label: 'D', color: '#F97316', value: -10, speed: [110, 180] }
+            ]
+        };
+        const moneyQuest = {
+            active: false,
+            paused: false,
+            over: false,
+            awaitingQuiz: false,
+            score: 0,
+            lives: 3,
+            duration: 60,
+            timeLeft: 60,
+            bestScore: 0,
+            player: { x: 160, y: 200, size: 15, speed: 230, shieldUntil: 0 },
+            entities: [],
+            input: { up: false, down: false, left: false, right: false },
+            spawnTicker: 0,
+            spawnGap: 0.7,
+            nextQuizAt: 14,
+            elapsedPlayMs: 0,
+            lastTs: 0,
+            rafId: null,
+            rewarded: false,
+            initialized: false
+        };
+
+        // --- 2D MONEY QUEST: UI BINDING ---
+        function getMoneyQuestBestKey() {
+            return `${getStorageKey()}_money_quest_best`;
+        }
+
+        function loadMoneyQuestBest() {
+            try {
+                const raw = localStorage.getItem(getMoneyQuestBestKey());
+                return Math.max(0, Number(raw || 0));
+            } catch (_) {
+                return 0;
+            }
+        }
+
+        function saveMoneyQuestBest(score) {
+            try {
+                localStorage.setItem(getMoneyQuestBestKey(), String(Math.max(0, Number(score || 0))));
+            } catch (_) {}
+        }
+
+        function resizeMoneyQuestCanvas() {
+            if (!moneyQuestCanvas || !moneyQuestContext) return;
+            const ratio = window.devicePixelRatio || 1;
+            const rect = moneyQuestCanvas.getBoundingClientRect();
+            const width = Math.max(260, Math.floor(rect.width));
+            const height = Math.max(220, Math.floor(rect.height));
+            moneyQuestCanvas.width = Math.floor(width * ratio);
+            moneyQuestCanvas.height = Math.floor(height * ratio);
+            moneyQuestContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+        }
+
+        function setMoneyQuestInput(direction, value) {
+            if (!moneyQuest.input.hasOwnProperty(direction)) return;
+            moneyQuest.input[direction] = Boolean(value);
+        }
+
+        function updateMoneyQuestHud() {
+            if (moneyQuestScoreEl) moneyQuestScoreEl.innerText = Math.max(0, Math.round(moneyQuest.score));
+            if (moneyQuestBestEl) moneyQuestBestEl.innerText = Math.max(0, Math.round(moneyQuest.bestScore));
+            if (moneyQuestLivesEl) moneyQuestLivesEl.innerText = String(Math.max(0, moneyQuest.lives));
+            if (moneyQuestTimeEl) moneyQuestTimeEl.innerText = `${Math.max(0, Math.ceil(moneyQuest.timeLeft))}s`;
+            if (moneyQuestPauseBtn) moneyQuestPauseBtn.innerText = moneyQuest.paused && !moneyQuest.over ? 'Resume' : 'Pause';
+        }
+
+        function initMoneyQuestControls() {
+            if (moneyQuest.initialized) return;
+            moneyQuest.initialized = true;
+            moneyQuest.bestScore = loadMoneyQuestBest();
+            updateMoneyQuestHud();
+            document.querySelectorAll('[data-mq-dir]').forEach(btn => {
+                const direction = btn.getAttribute('data-mq-dir');
+                btn.addEventListener('pointerdown', (event) => {
+                    event.preventDefault();
+                    setMoneyQuestInput(direction, true);
+                });
+                ['pointerup', 'pointerleave', 'pointercancel'].forEach(evt => {
+                    btn.addEventListener(evt, () => setMoneyQuestInput(direction, false));
+                });
+            });
+            document.addEventListener('keydown', event => {
+                const key = String(event.key || '').toLowerCase();
+                if (!moneyQuest.active) return;
+                if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) event.preventDefault();
+                if (key === 'arrowup' || key === 'w') setMoneyQuestInput('up', true);
+                if (key === 'arrowdown' || key === 's') setMoneyQuestInput('down', true);
+                if (key === 'arrowleft' || key === 'a') setMoneyQuestInput('left', true);
+                if (key === 'arrowright' || key === 'd') setMoneyQuestInput('right', true);
+                if (key === ' ' || key === 'p') window.toggleMoneyQuestPause();
+            });
+            document.addEventListener('keyup', event => {
+                const key = String(event.key || '').toLowerCase();
+                if (key === 'arrowup' || key === 'w') setMoneyQuestInput('up', false);
+                if (key === 'arrowdown' || key === 's') setMoneyQuestInput('down', false);
+                if (key === 'arrowleft' || key === 'a') setMoneyQuestInput('left', false);
+                if (key === 'arrowright' || key === 'd') setMoneyQuestInput('right', false);
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!moneyQuest.active) return;
+                if (document.hidden) {
+                    moneyQuest.paused = true;
+                    if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Paused because the app is in the background.';
+                    updateMoneyQuestHud();
+                    renderMoneyQuest();
+                } else if (!moneyQuest.over && !moneyQuest.awaitingQuiz) {
+                    moneyQuest.paused = false;
+                    if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Collect smart finance tokens. Avoid money traps.';
+                    updateMoneyQuestHud();
+                }
+            });
+            window.addEventListener('resize', resizeMoneyQuestCanvas);
+        }
+
+        // --- 2D MONEY QUEST: ENTITIES + COLLISIONS ---
+        function spawnMoneyQuestEntity() {
+            const width = moneyQuestCanvas?.clientWidth || 320;
+            const isPositive = Math.random() > 0.38;
+            const item = (isPositive ? MONEY_QUEST_ITEMS.positive : MONEY_QUEST_ITEMS.negative)[Math.floor(Math.random() * (isPositive ? MONEY_QUEST_ITEMS.positive.length : MONEY_QUEST_ITEMS.negative.length))];
+            moneyQuest.entities.push({
+                x: 20 + Math.random() * (width - 40),
+                y: -20,
+                r: 12 + Math.random() * 5,
+                speed: item.speed[0] + Math.random() * (item.speed[1] - item.speed[0]),
+                positive: isPositive,
+                value: item.value,
+                color: item.color,
+                label: item.label
+            });
+        }
+
+        function handleMoneyQuestCollisions(nowMs) {
+            const player = moneyQuest.player;
+            const remaining = [];
+            moneyQuest.entities.forEach(entity => {
+                const dx = entity.x - player.x;
+                const dy = entity.y - player.y;
+                const minDist = entity.r + player.size;
+                if (Math.hypot(dx, dy) <= minDist) {
+                    if (entity.positive) {
+                        moneyQuest.score += entity.value;
+                        if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Nice! Saving and budgeting habits raise your score.';
+                    } else if (nowMs > player.shieldUntil) {
+                        moneyQuest.lives -= 1;
+                        moneyQuest.score = Math.max(0, moneyQuest.score + entity.value);
+                        if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Careful: debt/scam traps reduce score and lives.';
+                    }
+                    return;
+                }
+                remaining.push(entity);
+            });
+            moneyQuest.entities = remaining;
+        }
+
+        // --- 2D MONEY QUEST: EDUCATIONAL PROMPT ---
+        function openMoneyQuestQuiz() {
+            const question = MONEY_QUEST_QUESTIONS[Math.floor(Math.random() * MONEY_QUEST_QUESTIONS.length)];
+            moneyQuest.awaitingQuiz = true;
+            moneyQuest.paused = true;
+            if (moneyQuestQuizQuestion) moneyQuestQuizQuestion.innerText = question.q;
+            if (moneyQuestQuizFeedback) moneyQuestQuizFeedback.innerText = 'Answer correctly for bonus points and temporary shield.';
+            if (moneyQuestQuizOptions) {
+                moneyQuestQuizOptions.innerHTML = question.options.map((option, index) => `
+                    <button onclick="answerMoneyQuestQuiz(${index})" class="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-brand-navy active:scale-[0.98]">
+                        ${escapeHTML(option)}
+                    </button>
+                `).join('');
+            }
+            moneyQuest.currentQuestion = question;
+            moneyQuestQuizPanel?.classList.remove('hidden');
+            updateMoneyQuestHud();
+        }
+
+        window.answerMoneyQuestQuiz = (selectedIndex) => {
+            if (!moneyQuest.currentQuestion || !moneyQuest.awaitingQuiz) return;
+            const correct = Number(selectedIndex) === Number(moneyQuest.currentQuestion.answer);
+            if (correct) {
+                moneyQuest.score += moneyQuest.currentQuestion.bonus;
+                moneyQuest.player.shieldUntil = performance.now() + 5000;
+                if (moneyQuestQuizFeedback) moneyQuestQuizFeedback.innerText = `${moneyQuest.currentQuestion.feedback} Bonus +${moneyQuest.currentQuestion.bonus} and shield for 5s.`;
+            } else {
+                moneyQuest.score = Math.max(0, moneyQuest.score - 6);
+                if (moneyQuestQuizFeedback) moneyQuestQuizFeedback.innerText = `Good try. ${moneyQuest.currentQuestion.feedback}`;
+            }
+            moneyQuest.awaitingQuiz = false;
+            moneyQuest.paused = false;
+            moneyQuest.currentQuestion = null;
+            moneyQuest.nextQuizAt = Math.max(10, (moneyQuest.duration - moneyQuest.timeLeft) + 14);
+            setTimeout(() => {
+                moneyQuestQuizPanel?.classList.add('hidden');
+                if (!moneyQuest.over) renderMoneyQuest();
+            }, 650);
+            updateMoneyQuestHud();
+        };
+
+        // --- 2D MONEY QUEST: RENDER + LOOP ---
+        function renderMoneyQuest() {
+            if (!moneyQuestCanvas || !moneyQuestContext) return;
+            const width = moneyQuestCanvas.clientWidth;
+            const height = moneyQuestCanvas.clientHeight;
+            const ctx = moneyQuestContext;
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 1;
+            for (let y = 18; y < height; y += 28) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            moneyQuest.entities.forEach(entity => {
+                ctx.fillStyle = entity.color;
+                ctx.beginPath();
+                ctx.arc(entity.x, entity.y, entity.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 12px Manrope';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(entity.label, entity.x, entity.y + 0.5);
+            });
+
+            if (performance.now() < moneyQuest.player.shieldUntil) {
+                ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+                ctx.beginPath();
+                ctx.arc(moneyQuest.player.x, moneyQuest.player.y, moneyQuest.player.size + 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.fillStyle = '#FFC000';
+            ctx.beginPath();
+            ctx.arc(moneyQuest.player.x, moneyQuest.player.y, moneyQuest.player.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1A237E';
+            ctx.font = 'bold 13px Manrope';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('You', moneyQuest.player.x, moneyQuest.player.y + 0.5);
+
+            if (moneyQuest.paused && !moneyQuest.over && !moneyQuest.awaitingQuiz) {
+                ctx.fillStyle = 'rgba(26,35,126,0.55)';
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '700 18px Manrope';
+                ctx.fillText('Paused', width / 2, height / 2);
+            }
+        }
+
+        function finishMoneyQuest() {
+            moneyQuest.over = true;
+            moneyQuest.paused = true;
+            moneyQuest.active = false;
+            if (moneyQuest.rafId) cancelAnimationFrame(moneyQuest.rafId);
+            moneyQuest.rafId = null;
+            moneyQuest.entities = [];
+            if (moneyQuest.score > moneyQuest.bestScore) {
+                moneyQuest.bestScore = moneyQuest.score;
+                saveMoneyQuestBest(moneyQuest.bestScore);
+            }
+            if (!moneyQuest.rewarded && moneyQuest.score > 0) {
+                const xpGain = Math.max(8, Math.round(moneyQuest.score / 8));
+                const coinGain = Math.max(2, Math.round(moneyQuest.score / 22));
+                rewardPlayer(xpGain, coinGain, '2D Money Quest completed', 'ph-game-controller');
+                addPracticeSeconds(Math.max(10, Math.round(moneyQuest.elapsedPlayMs / 1000)));
+                updateMissionProgress('session_complete', 1);
+                moneyQuest.rewarded = true;
+                updateProfileUI();
+                persistUserState();
+            }
+            if (moneyQuestGameOverScore) {
+                moneyQuestGameOverScore.innerText = `Score ${Math.round(moneyQuest.score)} • Best ${Math.round(moneyQuest.bestScore)}`;
+            }
+            moneyQuestGameOverPanel?.classList.remove('hidden');
+            if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Session ended. Restart to improve your plan.';
+            updateMoneyQuestHud();
+            renderMoneyQuest();
+        }
+
+        function stepMoneyQuest(timestamp) {
+            if (!moneyQuest.active) return;
+            const dt = Math.min(0.05, Math.max(0, (timestamp - (moneyQuest.lastTs || timestamp)) / 1000));
+            moneyQuest.lastTs = timestamp;
+            const nowMs = performance.now();
+            if (!moneyQuest.paused && !moneyQuest.awaitingQuiz && !moneyQuest.over) {
+                moneyQuest.elapsedPlayMs += dt * 1000;
+                moneyQuest.timeLeft = Math.max(0, moneyQuest.timeLeft - dt);
+                const moveX = (moneyQuest.input.right ? 1 : 0) - (moneyQuest.input.left ? 1 : 0);
+                const moveY = (moneyQuest.input.down ? 1 : 0) - (moneyQuest.input.up ? 1 : 0);
+                const norm = Math.hypot(moveX, moveY) || 1;
+                const width = moneyQuestCanvas?.clientWidth || 320;
+                const height = moneyQuestCanvas?.clientHeight || 240;
+                moneyQuest.player.x = Math.min(width - moneyQuest.player.size, Math.max(moneyQuest.player.size, moneyQuest.player.x + (moveX / norm) * moneyQuest.player.speed * dt));
+                moneyQuest.player.y = Math.min(height - moneyQuest.player.size, Math.max(moneyQuest.player.size, moneyQuest.player.y + (moveY / norm) * moneyQuest.player.speed * dt));
+
+                moneyQuest.spawnTicker += dt;
+                if (moneyQuest.spawnTicker >= moneyQuest.spawnGap) {
+                    moneyQuest.spawnTicker = 0;
+                    moneyQuest.spawnGap = 0.45 + Math.random() * 0.45;
+                    spawnMoneyQuestEntity();
+                }
+
+                moneyQuest.entities = moneyQuest.entities
+                    .map(entity => ({ ...entity, y: entity.y + entity.speed * dt }))
+                    .filter(entity => entity.y < (moneyQuestCanvas?.clientHeight || 240) + entity.r + 6);
+
+                handleMoneyQuestCollisions(nowMs);
+                if (moneyQuest.timeLeft <= 0 || moneyQuest.lives <= 0) return finishMoneyQuest();
+                if ((moneyQuest.duration - moneyQuest.timeLeft) >= moneyQuest.nextQuizAt) openMoneyQuestQuiz();
+                if (moneyQuest.score > moneyQuest.bestScore) moneyQuest.bestScore = moneyQuest.score;
+            }
+            updateMoneyQuestHud();
+            renderMoneyQuest();
+            moneyQuest.rafId = requestAnimationFrame(stepMoneyQuest);
+        }
+
+        function startMoneyQuest() {
+            initMoneyQuestControls();
+            resizeMoneyQuestCanvas();
+            moneyQuest.score = 0;
+            moneyQuest.lives = 3;
+            moneyQuest.timeLeft = moneyQuest.duration;
+            moneyQuest.player = {
+                x: (moneyQuestCanvas?.clientWidth || 320) / 2,
+                y: (moneyQuestCanvas?.clientHeight || 240) - 26,
+                size: 15,
+                speed: 230,
+                shieldUntil: 0
+            };
+            moneyQuest.entities = [];
+            moneyQuest.spawnTicker = 0;
+            moneyQuest.spawnGap = 0.7;
+            moneyQuest.nextQuizAt = 14;
+            moneyQuest.elapsedPlayMs = 0;
+            moneyQuest.rewarded = false;
+            moneyQuest.currentQuestion = null;
+            moneyQuest.awaitingQuiz = false;
+            moneyQuest.over = false;
+            moneyQuest.paused = false;
+            moneyQuest.active = true;
+            moneyQuest.lastTs = 0;
+            moneyQuest.input = { up: false, down: false, left: false, right: false };
+            moneyQuestQuizPanel?.classList.add('hidden');
+            moneyQuestGameOverPanel?.classList.add('hidden');
+            if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = 'Collect smart finance tokens. Avoid money traps.';
+            updateMoneyQuestHud();
+            renderMoneyQuest();
+            if (moneyQuest.rafId) cancelAnimationFrame(moneyQuest.rafId);
+            moneyQuest.rafId = requestAnimationFrame(stepMoneyQuest);
+        }
+
+        window.openMoneyQuest = () => {
+            moneyQuest.lastTab = state.currentTab || 'modes';
+            if (moneyQuestView) moneyQuestView.classList.remove('translate-x-full');
+            document.getElementById('bottom-nav')?.classList.add('translate-y-full');
+            startMoneyQuest();
+        };
+
+        window.closeMoneyQuest = () => {
+            if (moneyQuest.rafId) cancelAnimationFrame(moneyQuest.rafId);
+            moneyQuest.rafId = null;
+            moneyQuest.active = false;
+            moneyQuest.paused = true;
+            moneyQuest.input = { up: false, down: false, left: false, right: false };
+            moneyQuestQuizPanel?.classList.add('hidden');
+            if (moneyQuestView) moneyQuestView.classList.add('translate-x-full');
+            document.getElementById('bottom-nav')?.classList.remove('translate-y-full');
+            if (moneyQuest.lastTab && state.currentTab !== moneyQuest.lastTab) switchTab(moneyQuest.lastTab);
+        };
+
+        window.restartMoneyQuest = () => startMoneyQuest();
+
+        window.toggleMoneyQuestPause = () => {
+            if (state.currentView !== 'view-main' || !moneyQuestView || moneyQuestView.classList.contains('translate-x-full')) return;
+            if (moneyQuest.over || moneyQuest.awaitingQuiz) return;
+            moneyQuest.paused = !moneyQuest.paused;
+            if (moneyQuestHeaderTip) moneyQuestHeaderTip.innerText = moneyQuest.paused
+                ? 'Game paused. Tap resume when ready.'
+                : 'Collect smart finance tokens. Avoid money traps.';
+            updateMoneyQuestHud();
+            renderMoneyQuest();
         };
 
         function escapeHTML(str) {
